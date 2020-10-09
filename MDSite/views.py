@@ -24,7 +24,24 @@ from django.contrib import messages
 from django.http import HttpResponse, HttpResponseNotFound, Http404, HttpResponseRedirect, HttpResponsePermanentRedirect,JsonResponse
 from django.template.loader import render_to_string
 
+def registerPage(request):
+	if request.user.is_authenticated:
+		return redirect('index')
+	else:
+		form = CreateUserForm()
+		if request.method == 'POST':
+			form = CreateUserForm(request.POST)
+			if form.is_valid():
+				form.save()
+				user = form.cleaned_data.get('username')
+				messages.success(request, 'Account was created for ' + user)
 
+				return redirect('login')
+
+
+		context = {'form':form}
+		return render(request, 'MDSite/register.html', context)
+	
 class MDSiteView(ListView):
 	def get(self,request):
 		
@@ -163,32 +180,7 @@ def logoutUser(request):
 	return redirect('login')
 
 
-def registerPage(request):
-		form=CreateUserForm()
 
-		if request.method=='POST':
-			form=CreateUserForm(request.POST)
-			if form.is_valid():
-				form.save()
-				user = form.cleaned_data.get('username')
-				
-				user.groups.add(group)
-				#Added username after video because of error returning customer name if not added
-				Customer.objects.create(
-					user=user,
-					name=user.username,
-					)
-
-				messages.success(request, 'Account was created for ' + user)
-				messages.success(request,'')
-				return redirect('login')
-
-
-
-
-
-		contex={'form':form}
-		return  render(request,"MDSite/register.html",contex)
 
 def userPage(request):
 		orders=request.user.customer.order_set.all()
